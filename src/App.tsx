@@ -145,6 +145,14 @@ function buildPortfolioProjects() {
 
 const portfolioProjects = buildPortfolioProjects();
 const portfolioHistory = portfolioProjects.map((project) => project.title);
+const portfolioCategoryCounts = portfolioProjects.reduce<Record<string, number>>((counts, project) => {
+  counts[project.filterKey] = (counts[project.filterKey] ?? 0) + 1;
+  return counts;
+}, {});
+const visiblePortfolioFilters = portfolioFilters.filter(
+  (filter) => filter.key === 'all' || (portfolioCategoryCounts[filter.key] ?? 0) > 0,
+);
+const portfolioLaneCount = visiblePortfolioFilters.length - 1;
 const portfolioYears = portfolioProjects
   .map((project) => project.date.match(/(20\d{2})/)?.[1])
   .filter((value): value is string => Boolean(value));
@@ -157,7 +165,7 @@ const Stats = () => {
     { label: 'PORTFOLIO ARCHIVE', value: `${portfolioProjects.length}+` },
     { label: 'YEARS OF EXPERIENCE', value: '12+' },
     { label: 'ARCHIVE RANGE', value: `${earliestPortfolioYear}-${latestPortfolioYear}` },
-    { label: 'PROJECT LANES', value: '6' },
+    { label: 'PROJECT LANES', value: `${portfolioLaneCount}` },
   ];
 
   return (
@@ -586,14 +594,11 @@ const Portfolio = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
           <div className="max-w-3xl">
             <h2 className="text-brand-accent font-bold text-xs tracking-[0.3em] mb-4 uppercase">PORTFOLIO</h2>
-            <h3 className="text-3xl md:text-5xl font-bold text-brand-dark tracking-tight mb-6">
+            <h3 className="text-3xl md:text-5xl font-bold text-brand-dark tracking-tight">
               주요 프로젝트와
               <br />
               누적 아카이브
             </h3>
-            <p className="text-gray-500 text-lg font-light leading-relaxed">
-              공공행사, 기업행사, 국제회의, 전시 프로젝트의 주요 실적과 전체 아카이브를 정리했습니다.
-            </p>
           </div>
           <div className="grid grid-cols-2 gap-4 md:min-w-[320px]">
             <div className="border border-brand-gray-border p-6 bg-brand-gray-light">
@@ -610,7 +615,7 @@ const Portfolio = () => {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-12">
-          {portfolioFilters.map((filter) => (
+          {visiblePortfolioFilters.map((filter) => (
             <button
               key={filter.key}
               type="button"
