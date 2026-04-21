@@ -1,0 +1,7 @@
+{
+  "name": "JS&PARTNERS 공식 홈페이지",
+  "description": "정부 포럼, 공공행사, 기업행사, 전시, 축제 전문 기획사 JS&PARTNERS의 공식 홈페이지입니다.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans KR", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-navy: #2E3A59;
+  --color-brand-blue: #475569;
+  --color-brand-accent: #C5A059;
+  --color-brand-dark: #1E293B;
+  --color-brand-gray-light: #F8FAFC;
+  --color-brand-gray-border: #F1F5F9;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply text-brand-dark bg-white antialiased;
+    font-feature-settings: "prec", "tnum";
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply py-24 md:py-36;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto px-6 md:px-12;
+  }
+
+  .btn-primary {
+    @apply bg-brand-navy text-white px-12 py-5 rounded-none font-semibold transition-all duration-500 hover:bg-brand-accent hover:shadow-2xl active:scale-[0.98] tracking-[0.2em] uppercase text-[10px];
+  }
+
+  .btn-outline {
+    @apply border border-brand-navy text-brand-navy px-12 py-5 rounded-none font-semibold transition-all duration-500 hover:bg-brand-navy hover:text-white active:scale-[0.98] tracking-[0.2em] uppercase text-[10px];
+  }
+
+  .card-hover {
+    @apply transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-transparent hover:border-brand-gray-border;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-brand-gray-light;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-navy/20 transition-colors hover:bg-brand-accent;
+}
