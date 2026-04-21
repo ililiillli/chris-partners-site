@@ -75,6 +75,17 @@ const portfolioCategoryMap: Record<string, string> = {
   culture: '문화/예술/전시',
 };
 
+const homeHref = import.meta.env.BASE_URL || '/';
+
+function resolveAssetPath(path: string) {
+  if (!path || /^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith('data:')) {
+    return path;
+  }
+
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  return `${baseUrl}${path.replace(/^\/+/, '')}`;
+}
+
 function getPrimaryPortfolioCategory(categories: string[]) {
   const priority = ['conference', 'corporate', 'ir-event', 'blockchain', 'academic', 'culture'];
 
@@ -121,7 +132,7 @@ function buildPortfolioProjects() {
       return {
         title: item.title,
         link: item.link,
-        image: item.thumbnailLocal || item.thumbnailUrl,
+        image: resolveAssetPath(item.thumbnailLocal || item.thumbnailUrl),
         category,
         filterKey,
         desc: trimText(description, 96),
@@ -199,9 +210,9 @@ const Header = () => {
       }`}
     >
       <div className="container-custom flex justify-between items-center">
-        <a href="/" className="flex items-center gap-4 group">
+        <a href={homeHref} className="flex items-center gap-4 group">
           <div className="relative w-10 h-10 flex items-center justify-center">
-            <img src="/logo.png" alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
+            <img src={resolveAssetPath('/logo.png')} alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
             <span
@@ -280,7 +291,7 @@ const Hero = () => {
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-brand-dark">
       <div className="absolute inset-0 z-0">
         <img
-          src="/public-communication.png"
+          src={resolveAssetPath('/public-communication.png')}
           alt="Event Background"
           className="w-full h-full object-cover opacity-30 grayscale"
         />
@@ -397,7 +408,7 @@ const About = () => {
           >
             <div className="aspect-[4/5] bg-brand-gray-light overflow-hidden">
               <img
-                src="/asia-art.png"
+                src={resolveAssetPath('/asia-art.png')}
                 alt="Professional Space"
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
               />
@@ -953,7 +964,7 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-8 h-8 flex items-center justify-center">
-                <img src="/logo.png" alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
+                <img src={resolveAssetPath('/logo.png')} alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-bold text-lg tracking-[0.2em]">JS&amp;PARTNERS</span>
             </div>
