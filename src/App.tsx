@@ -17,18 +17,29 @@ import {
   PenTool,
   Calendar,
   Award,
+  ArrowLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import worksPayload from '../data/chris-works.json';
 
+type ImportedGalleryImage = {
+  remote: string;
+  local: string;
+};
+
 type ImportedWork = {
+  slug: string;
   title: string;
   link: string;
   thumbnailUrl: string;
   thumbnailLocal: string;
+  thumbnailAlt: string;
   categorySlugs: string[];
   description: string;
   paragraphs: string[];
+  body: string;
+  heroImage: string;
+  galleryImages: ImportedGalleryImage[];
   meta: {
     Date?: string;
     Venue?: string;
@@ -38,15 +49,23 @@ type ImportedWork = {
 };
 
 type PortfolioProject = {
+  slug: string;
   title: string;
   link: string;
   image: string;
+  heroImage: string;
+  galleryImages: string[];
+  thumbnailAlt: string;
   category: string;
   filterKey: string;
   desc: string;
   date: string;
   venue: string;
   participants: string;
+  organizer: string;
+  projectScope: string;
+  body: string;
+  paragraphs: string[];
 };
 
 type PortfolioFilter = {
@@ -76,6 +95,9 @@ const portfolioCategoryMap: Record<string, string> = {
 };
 
 const homeHref = import.meta.env.BASE_URL || '/';
+const defaultPageTitle = 'JS&PARTNERS | 공공행사 · 국제회의 · 기업행사 전문 기획사';
+const defaultPageDescription =
+  '정부 포럼, 공공행사, 국제회의, 기업행사, 전시, 축제 기획 및 운영 전문 JS&PARTNERS. 주요 포트폴리오와 행사 문의 정보를 확인하세요.';
 
 function resolveAssetPath(path: string) {
   if (!path || /^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith('data:')) {
@@ -84,6 +106,22 @@ function resolveAssetPath(path: string) {
 
   const baseUrl = import.meta.env.BASE_URL || '/';
   return `${baseUrl}${path.replace(/^\/+/, '')}`;
+}
+
+function sectionHref(sectionId: string) {
+  return `${homeHref}#${sectionId}`;
+}
+
+function workHref(slug: string) {
+  return `${homeHref}?work=${encodeURIComponent(slug)}`;
+}
+
+function readSelectedWorkSlug() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return new URLSearchParams(window.location.search).get('work') ?? '';
 }
 
 function getPrimaryPortfolioCategory(categories: string[]) {
@@ -128,23 +166,37 @@ function buildPortfolioProjects() {
       const filterKey = getPrimaryPortfolioCategory(item.categorySlugs);
       const category = portfolioCategoryMap[filterKey] ?? '컨퍼런스/국제회의';
       const description = item.paragraphs[0] || item.description || item.meta['Project Scope'] || '행사 기획 및 운영';
+      const galleryImages = item.galleryImages.map((image) => resolveAssetPath(image.local || image.remote)).filter(Boolean);
+      const heroImage = galleryImages[0] || resolveAssetPath(item.thumbnailLocal || item.heroImage || item.thumbnailUrl);
 
       return {
+        slug: item.slug,
         title: item.title,
         link: item.link,
         image: resolveAssetPath(item.thumbnailLocal || item.thumbnailUrl),
+        heroImage,
+        galleryImages,
+        thumbnailAlt: item.thumbnailAlt || item.title,
         category,
         filterKey,
         desc: trimText(description, 96),
         date: item.meta.Date || '일정 비공개',
         venue: item.meta.Venue || '장소 비공개',
         participants: item.meta.Participant || '규모 비공개',
+        organizer: item.meta['Host & Organizer'] || '주최 정보 비공개',
+        projectScope: item.meta['Project Scope'] || '',
+        body: item.body || '',
+        paragraphs: item.paragraphs,
       } satisfies PortfolioProject;
     });
 }
 
 const portfolioProjects = buildPortfolioProjects();
-const portfolioHistory = portfolioProjects.map((project) => project.title);
+const portfolioProjectsBySlug = Object.fromEntries(portfolioProjects.map((project) => [project.slug, project])) as Record<
+  string,
+  PortfolioProject
+>;
+const portfolioHistory = portfolioProjects;
 const portfolioCategoryCounts = portfolioProjects.reduce<Record<string, number>>((counts, project) => {
   counts[project.filterKey] = (counts[project.filterKey] ?? 0) + 1;
   return counts;
@@ -205,10 +257,10 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { name: 'ABOUT', href: '#about' },
-    { name: 'SERVICES', href: '#services' },
-    { name: 'PORTFOLIO', href: '#portfolio' },
-    { name: 'CONTACT', href: '#contact' },
+    { name: 'ABOUT', href: sectionHref('about') },
+    { name: 'SERVICES', href: sectionHref('services') },
+    { name: 'PORTFOLIO', href: sectionHref('portfolio') },
+    { name: 'CONTACT', href: sectionHref('contact') },
   ];
 
   return (
@@ -252,7 +304,7 @@ const Header = () => {
               {link.name}
             </a>
           ))}
-          <a href="#contact" className="btn-primary !py-2.5 !px-6">
+          <a href={sectionHref('contact')} className="btn-primary !py-2.5 !px-6">
             INQUIRY
           </a>
         </nav>
@@ -284,7 +336,7 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
-            <a href="#contact" className="btn-primary text-center" onClick={() => setIsMobileMenuOpen(false)}>
+            <a href={sectionHref('contact')} className="btn-primary text-center" onClick={() => setIsMobileMenuOpen(false)}>
               행사 문의하기
             </a>
           </motion.div>
@@ -634,10 +686,8 @@ const Portfolio = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-24">
           {filteredProjects.map((project, idx) => (
             <motion.a
-              key={`${activeCategory}-${project.title}`}
-              href={project.link}
-              target="_blank"
-              rel="noreferrer"
+              key={`${activeCategory}-${project.slug}`}
+              href={workHref(project.slug)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
@@ -646,7 +696,7 @@ const Portfolio = () => {
               <div className="relative aspect-[4/5] overflow-hidden mb-8 bg-brand-gray-light">
                 <img
                   src={project.image}
-                  alt={project.title}
+                  alt={project.thumbnailAlt}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-brand-navy/40 opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center">
@@ -689,19 +739,20 @@ const Portfolio = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6">
             {portfolioHistory.map((item, idx) => (
-              <motion.div
-                key={`${item}-${idx}`}
+              <motion.a
+                key={`${item.slug}-${idx}`}
+                href={workHref(item.slug)}
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.02 }}
-                className="flex items-start gap-4 group cursor-default"
+                className="flex items-start gap-4 group"
               >
                 <span className="text-[10px] font-bold text-brand-accent/30 group-hover:text-brand-accent transition-colors mt-1">
                   {(idx + 1).toString().padStart(2, '0')}
                 </span>
-                <span className="text-sm text-gray-500 group-hover:text-brand-dark transition-colors leading-relaxed">{item}</span>
-              </motion.div>
+                <span className="text-sm text-gray-500 group-hover:text-brand-dark transition-colors leading-relaxed">{item.title}</span>
+              </motion.a>
             ))}
           </div>
         </div>
@@ -831,6 +882,172 @@ const Strengths = () => {
   );
 };
 
+const WorkDetail = ({
+  project,
+  previousProject,
+  nextProject,
+}: {
+  project: PortfolioProject;
+  previousProject?: PortfolioProject;
+  nextProject?: PortfolioProject;
+}) => {
+  const detailFacts = [
+    { label: 'Category', value: project.category },
+    { label: 'Date', value: project.date },
+    { label: 'Venue', value: project.venue },
+    { label: 'Participants', value: project.participants },
+    { label: 'Host & Organizer', value: project.organizer },
+    { label: 'Project Scope', value: project.projectScope },
+  ].filter((item) => item.value);
+
+  const galleryLead = project.galleryImages[0] || project.heroImage || project.image;
+  const galleryImages = project.galleryImages.length > 1 ? project.galleryImages.slice(1) : project.galleryImages;
+  const storyParagraphs = project.paragraphs.length ? project.paragraphs : [project.desc];
+
+  return (
+    <main className="bg-white">
+      <section className="relative overflow-hidden bg-brand-dark text-white pt-36 pb-20">
+        <div className="absolute inset-0">
+          <img src={project.heroImage || project.image} alt={project.title} className="w-full h-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-brand-dark/85" />
+        </div>
+
+        <div className="container-custom relative z-10">
+          <a
+            href={sectionHref('portfolio')}
+            className="inline-flex items-center gap-3 text-[11px] font-bold tracking-[0.2em] text-brand-accent uppercase mb-12"
+          >
+            <ArrowLeft size={16} />
+            Portfolio Back
+          </a>
+
+          <div className="max-w-5xl">
+            <p className="text-[10px] font-bold tracking-[0.35em] text-brand-accent uppercase mb-5">{project.category}</p>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-8">{project.title}</h1>
+            <p className="text-lg md:text-xl text-gray-300 font-light leading-relaxed max-w-3xl">{project.desc}</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
+            <div className="border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Date</p>
+              <p className="text-sm font-medium text-white">{project.date}</p>
+            </div>
+            <div className="border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Venue</p>
+              <p className="text-sm font-medium text-white">{project.venue}</p>
+            </div>
+            <div className="border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Participants</p>
+              <p className="text-sm font-medium text-white">{project.participants}</p>
+            </div>
+            <div className="border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Organizer</p>
+              <p className="text-sm font-medium text-white">{project.organizer}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container-custom">
+          <div className="aspect-[16/9] overflow-hidden bg-brand-gray-light">
+            <img src={galleryLead} alt={project.title} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding bg-white">
+        <div className="container-custom grid lg:grid-cols-[0.82fr_1.18fr] gap-16 xl:gap-24">
+          <aside className="space-y-6">
+            <div>
+              <h2 className="text-brand-accent font-bold text-[10px] tracking-[0.4em] mb-4 uppercase">Project Facts</h2>
+              <div className="border border-brand-gray-border divide-y divide-brand-gray-border">
+                {detailFacts.map((fact) => (
+                  <div key={fact.label} className="p-5 bg-brand-gray-light">
+                    <p className="text-[10px] font-bold tracking-[0.24em] text-gray-400 uppercase mb-2">{fact.label}</p>
+                    <p className="text-sm text-brand-dark font-medium leading-relaxed">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          <div>
+            <h2 className="text-brand-accent font-bold text-[10px] tracking-[0.4em] mb-4 uppercase">Project Story</h2>
+            <div className="space-y-6 text-base md:text-lg text-gray-600 font-light leading-relaxed">
+              {storyParagraphs.map((paragraph, index) => (
+                <p key={`${project.slug}-paragraph-${index}`}>{paragraph}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding bg-brand-gray-light">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <h2 className="text-brand-accent font-bold text-[10px] tracking-[0.4em] mb-4 uppercase">Gallery</h2>
+              <h3 className="text-2xl md:text-4xl font-bold text-brand-dark tracking-tight">프로젝트 이미지</h3>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {galleryImages.map((image, index) => (
+              <div key={`${project.slug}-gallery-${index}`} className="aspect-[4/3] overflow-hidden bg-white">
+                <img src={image} alt={`${project.title} 이미지 ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding bg-white border-t border-brand-gray-border">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <h2 className="text-brand-accent font-bold text-[10px] tracking-[0.4em] mb-4 uppercase">More Works</h2>
+              <h3 className="text-2xl md:text-4xl font-bold text-brand-dark tracking-tight">다른 프로젝트 보기</h3>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[previousProject, nextProject].filter(Boolean).map((item, index) => {
+              const sibling = item as PortfolioProject;
+              return (
+                <a
+                  key={sibling.slug}
+                  href={workHref(sibling.slug)}
+                  className="group border border-brand-gray-border bg-brand-gray-light overflow-hidden"
+                >
+                  <div className="aspect-[16/10] overflow-hidden">
+                    <img
+                      src={sibling.image}
+                      alt={sibling.thumbnailAlt}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-8">
+                    <p className="text-[10px] font-bold tracking-[0.24em] text-brand-accent uppercase mb-3">
+                      {index === 0 ? 'Previous Project' : 'Next Project'}
+                    </p>
+                    <h4 className="text-xl font-bold text-brand-dark tracking-tight mb-3">{sibling.title}</h4>
+                    <p className="text-sm text-gray-500 font-light leading-relaxed mb-6">{sibling.desc}</p>
+                    <span className="inline-flex items-center gap-3 text-[11px] font-bold tracking-[0.18em] text-brand-dark uppercase">
+                      Read Project
+                      <ArrowRight size={15} />
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+};
+
 const ContactCTA = () => {
   return (
     <section className="py-32 bg-brand-accent overflow-hidden relative">
@@ -848,7 +1065,7 @@ const ContactCTA = () => {
             </p>
           </div>
           <a
-            href="#contact"
+            href={sectionHref('contact')}
             className="bg-white text-brand-dark px-12 py-6 font-bold tracking-[0.2em] text-xs hover:bg-brand-dark hover:text-white transition-all duration-500 shadow-2xl"
           >
             START A PROJECT
@@ -983,22 +1200,22 @@ const Footer = () => {
             <h4 className="text-[10px] font-bold tracking-[0.3em] text-gray-400 mb-8 uppercase">Navigation</h4>
             <ul className="space-y-4 text-xs text-gray-500 font-medium">
               <li>
-                <a href="#about" className="hover:text-brand-accent transition-colors">
+                <a href={sectionHref('about')} className="hover:text-brand-accent transition-colors">
                   ABOUT
                 </a>
               </li>
               <li>
-                <a href="#services" className="hover:text-brand-accent transition-colors">
+                <a href={sectionHref('services')} className="hover:text-brand-accent transition-colors">
                   SERVICES
                 </a>
               </li>
               <li>
-                <a href="#portfolio" className="hover:text-brand-accent transition-colors">
+                <a href={sectionHref('portfolio')} className="hover:text-brand-accent transition-colors">
                   PORTFOLIO
                 </a>
               </li>
               <li>
-                <a href="#contact" className="hover:text-brand-accent transition-colors">
+                <a href={sectionHref('contact')} className="hover:text-brand-accent transition-colors">
                   CONTACT
                 </a>
               </li>
@@ -1048,21 +1265,72 @@ const Footer = () => {
 };
 
 export default function App() {
+  const [selectedWorkSlug, setSelectedWorkSlug] = useState(() => readSelectedWorkSlug());
+  const selectedProject = selectedWorkSlug ? portfolioProjectsBySlug[selectedWorkSlug] ?? null : null;
+  const selectedProjectIndex = selectedProject ? portfolioProjects.findIndex((project) => project.slug === selectedProject.slug) : -1;
+  const previousProject = selectedProjectIndex > 0 ? portfolioProjects[selectedProjectIndex - 1] : undefined;
+  const nextProject =
+    selectedProjectIndex >= 0 && selectedProjectIndex < portfolioProjects.length - 1
+      ? portfolioProjects[selectedProjectIndex + 1]
+      : undefined;
+
+  useEffect(() => {
+    const syncSelectedWork = () => {
+      setSelectedWorkSlug(readSelectedWorkSlug());
+    };
+
+    window.addEventListener('popstate', syncSelectedWork);
+    return () => window.removeEventListener('popstate', syncSelectedWork);
+  }, []);
+
+  useEffect(() => {
+    if (selectedWorkSlug && !selectedProject) {
+      window.history.replaceState({}, '', homeHref);
+      setSelectedWorkSlug('');
+    }
+  }, [selectedProject, selectedWorkSlug]);
+
+  useEffect(() => {
+    document.title = selectedProject ? `${selectedProject.title} | JS&PARTNERS` : defaultPageTitle;
+
+    const description = selectedProject
+      ? `${selectedProject.desc} | JS&PARTNERS 프로젝트 상세 페이지`
+      : defaultPageDescription;
+
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    if (descriptionMeta) {
+      descriptionMeta.setAttribute('content', description);
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedProject) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [selectedProject]);
+
   return (
     <div className="font-sans">
       <Header />
-      <main>
-        <Hero />
-        <About />
-        <Stats />
-        <Process />
-        <Services />
-        <Portfolio />
-        <Partners />
-        <Strengths />
-        <ContactCTA />
-        <Contact />
-      </main>
+      {selectedProject ? (
+        <>
+          <WorkDetail project={selectedProject} previousProject={previousProject} nextProject={nextProject} />
+          <ContactCTA />
+        </>
+      ) : (
+        <main>
+          <Hero />
+          <About />
+          <Stats />
+          <Process />
+          <Services />
+          <Portfolio />
+          <Partners />
+          <Strengths />
+          <ContactCTA />
+          <Contact />
+        </main>
+      )}
       <Footer />
     </div>
   );
