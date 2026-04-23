@@ -62,7 +62,6 @@ type PortfolioProject = {
   date: string;
   venue: string;
   participants: string;
-  organizer: string;
   projectScope: string;
   body: string;
   paragraphs: string[];
@@ -183,7 +182,6 @@ function buildPortfolioProjects() {
         date: item.meta.Date || '일정 비공개',
         venue: item.meta.Venue || '장소 비공개',
         participants: item.meta.Participant || '규모 비공개',
-        organizer: item.meta['Host & Organizer'] || '주최 정보 비공개',
         projectScope: item.meta['Project Scope'] || '',
         body: item.body || '',
         paragraphs: item.paragraphs,
@@ -896,7 +894,6 @@ const WorkDetail = ({
     { label: 'Date', value: project.date },
     { label: 'Venue', value: project.venue },
     { label: 'Participants', value: project.participants },
-    { label: 'Host & Organizer', value: project.organizer },
     { label: 'Project Scope', value: project.projectScope },
   ].filter((item) => item.value);
 
@@ -939,10 +936,6 @@ const WorkDetail = ({
             <div className="border border-white/10 bg-white/5 p-5">
               <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Participants</p>
               <p className="text-sm font-medium text-white">{project.participants}</p>
-            </div>
-            <div className="border border-white/10 bg-white/5 p-5">
-              <p className="text-[10px] font-bold tracking-[0.25em] text-gray-400 uppercase mb-2">Organizer</p>
-              <p className="text-sm font-medium text-white">{project.organizer}</p>
             </div>
           </div>
         </div>
