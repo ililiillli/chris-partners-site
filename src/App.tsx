@@ -94,9 +94,9 @@ const portfolioCategoryMap: Record<string, string> = {
 };
 
 const homeHref = import.meta.env.BASE_URL || '/';
-const defaultPageTitle = 'JS&PARTNERS | 공공행사 · 국제회의 · 기업행사 전문 기획사';
+const defaultPageTitle = '제이에스파트너스 JS&PARTNERS | 공공행사 · 국제회의 · 기업행사 전문 기획사';
 const defaultPageDescription =
-  '정부 포럼, 공공행사, 국제회의, 기업행사, 전시, 축제 기획 및 운영 전문 JS&PARTNERS. 주요 포트폴리오와 행사 문의 정보를 확인하세요.';
+  '제이에스파트너스(JS&PARTNERS)는 정부 포럼, 공공행사, 국제회의, 기업행사, 전시, 축제 기획 및 운영을 수행하는 전문 기획사입니다. 주요 포트폴리오와 행사 문의 정보를 확인하세요.';
 
 function resolveAssetPath(path: string) {
   if (!path || /^(?:[a-z]+:)?\/\//i.test(path) || path.startsWith('data:')) {
@@ -269,7 +269,7 @@ const Header = () => {
     >
       <div className="container-custom flex justify-between items-center">
         <a href={homeHref} className="flex items-center gap-4 group">
-          <div className="relative w-10 h-10 flex items-center justify-center">
+          <div className="relative w-[120px] h-[120px] flex items-center justify-center">
             <img src={resolveAssetPath('/logo.png')} alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
@@ -366,7 +366,7 @@ const Hero = () => {
             <span className="inline-block tracking-[0.5em] text-brand-accent text-[10px] font-bold uppercase mb-10 border-x border-brand-accent px-6">
               Excellence in Event Planning
             </span>
-            <h1 className="text-6xl md:text-[110px] font-bold text-white leading-[0.95] mb-12 tracking-tighter">
+            <h1 className="text-6xl md:text-[90px] font-bold text-white leading-[0.95] mb-12 tracking-tighter">
               <motion.span
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1178,7 +1178,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 flex items-center justify-center">
+              <div className="w-[96px] h-[96px] flex items-center justify-center">
                 <img src={resolveAssetPath('/logo.png')} alt="JS&PARTNERS Logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-bold text-lg tracking-[0.2em]">JS&amp;PARTNERS</span>
@@ -1284,10 +1284,10 @@ export default function App() {
   }, [selectedProject, selectedWorkSlug]);
 
   useEffect(() => {
-    document.title = selectedProject ? `${selectedProject.title} | JS&PARTNERS` : defaultPageTitle;
+    document.title = selectedProject ? `${selectedProject.title} | 제이에스파트너스 JS&PARTNERS` : defaultPageTitle;
 
     const description = selectedProject
-      ? `${selectedProject.desc} | JS&PARTNERS 프로젝트 상세 페이지`
+      ? `${selectedProject.desc} | 제이에스파트너스 JS&PARTNERS 프로젝트 상세 페이지`
       : defaultPageDescription;
 
     const descriptionMeta = document.querySelector('meta[name="description"]');
