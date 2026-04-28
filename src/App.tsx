@@ -349,9 +349,9 @@ const Hero = () => {
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-brand-dark">
       <div className="absolute inset-0 z-0">
         <img
-          src={resolveAssetPath('/public-communication.png')}
-          alt="Event Background"
-          className="w-full h-full object-cover opacity-30 grayscale"
+          src={resolveAssetPath('/chris-works/서울메타위크2025-reimagine-what-is-possible-copy/thumb.jpg')}
+          alt="서울메타위크2025"
+          className="w-full h-full object-cover opacity-35 grayscale"
         />
         <div className="absolute inset-0 bg-brand-dark/40" />
       </div>
@@ -437,8 +437,17 @@ const About = () => {
   ];
 
   return (
-    <section id="about" className="section-padding bg-white">
-      <div className="container-custom">
+    <section id="about" className="section-padding bg-white relative overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <img
+          src={resolveAssetPath('/public-communication.png')}
+          alt="Event Background"
+          className="w-full h-full object-cover opacity-[0.08] grayscale"
+        />
+        <div className="absolute inset-0 bg-white/90" />
+      </div>
+
+      <div className="container-custom relative z-10">
         <div className="grid lg:grid-cols-2 gap-24 items-center mb-32">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-brand-accent font-bold text-xs tracking-[0.3em] mb-6 uppercase">PHILOSOPHY</h2>
