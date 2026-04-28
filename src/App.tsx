@@ -442,9 +442,9 @@ const About = () => {
         <img
           src={resolveAssetPath('/public-communication.png')}
           alt="Event Background"
-          className="w-full h-full object-cover opacity-25 grayscale"
+          className="w-full h-full object-cover opacity-50"
         />
-        <div className="absolute inset-0 bg-white/70" />
+        <div className="absolute inset-0 bg-white/45" />
       </div>
 
       <div className="container-custom relative z-10">
